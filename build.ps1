@@ -138,6 +138,16 @@ try {
         -Destination $stageProject -Recurse
     Copy-Item -LiteralPath (Join-Path $projectRoot 'host-test') `
         -Destination $stageProject -Recurse
+    $rawResourceDirectory = Join-Path $stageProject 'res\raw'
+    New-Item -ItemType Directory -Path $rawResourceDirectory -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'THIRD_PARTY_NOTICES.md') `
+        -Destination (Join-Path $rawResourceDirectory 'third_party_notices.txt')
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSE') `
+        -Destination (Join-Path $rawResourceDirectory 'project_mit.txt')
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSES\Apache-2.0.txt') `
+        -Destination (Join-Path $rawResourceDirectory 'apache_2_0.txt')
+    Copy-Item -LiteralPath (Join-Path $projectRoot 'LICENSES\Bark-MIT.txt') `
+        -Destination (Join-Path $rawResourceDirectory 'bark_mit.txt')
     Copy-Item -LiteralPath $androidJar -Destination $stageAndroidJar
 
     if (-not $SkipTests) {
@@ -252,6 +262,17 @@ try {
     Assert-NativeSuccess -Step 'APK signature verification' -ExitCode $LASTEXITCODE
     & $aapt dump badging $stageSignedApk | Select-Object -First 8
     Assert-NativeSuccess -Step 'APK manifest verification' -ExitCode $LASTEXITCODE
+    $apkEntries = @(& $aapt list $stageSignedApk)
+    Assert-NativeSuccess -Step 'APK resource listing' -ExitCode $LASTEXITCODE
+    foreach ($requiredEntry in @(
+            'res/raw/project_mit.txt',
+            'res/raw/apache_2_0.txt',
+            'res/raw/bark_mit.txt',
+            'res/raw/third_party_notices.txt')) {
+        if ($apkEntries -notcontains $requiredEntry) {
+            throw "APK is missing required license resource: $requiredEntry"
+        }
+    }
     Copy-Item -LiteralPath $stageSignedApk -Destination $signedApk
     Get-FileHash -LiteralPath $signedApk -Algorithm SHA256 |
         Select-Object Path, Algorithm, Hash
