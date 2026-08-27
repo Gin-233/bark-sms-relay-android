@@ -11,6 +11,8 @@ public final class HostTests {
     }
 
     private static void testOfficialBarkVector() throws Exception {
+        // Published Bark encryption vector, used under Bark's MIT license.
+        // See THIRD_PARTY_NOTICES.md and LICENSES/Bark-MIT.txt.
         String plaintext = "{\"body\": \"test\", \"sound\": \"birdsong\"}";
         String encrypted = CryptoUtils.encryptBark(
                 plaintext, "1234567890123456", "1111111111111111");

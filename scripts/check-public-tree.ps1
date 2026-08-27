@@ -5,13 +5,20 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = [System.IO.Path]::GetFullPath(
     (Split-Path -Parent $PSScriptRoot)).TrimEnd('\')
 $textExtensions = @(
-    '.java', '.xml', '.md', '.ps1', '.yml', '.yaml', '.json', '.properties'
+    '.java', '.xml', '.md', '.txt', '.ps1', '.yml', '.yaml', '.json', '.properties'
 )
 $textNames = @('.gitignore', '.gitattributes', 'LICENSE')
 $generatedDirectories = @('build', '.git', '.keys')
 $forbiddenArtifactExtensions = @(
     '.apk', '.aab', '.jks', '.keystore', '.p12', '.pfx', '.pem', '.key',
-    '.der', '.idsig', '.log', '.db', '.sqlite', '.env'
+    '.der', '.cer', '.crt', '.p8', '.idsig', '.log', '.db', '.sqlite', '.env'
+)
+$sensitiveFileNamePattern = '(?i)(?:^|/)(?:\.env(?!\.(?:example|sample|template)$)(?:\.[^/]+)?|local\.properties|keystore\.properties|google-services\.json|id_(?:rsa|dsa|ecdsa|ed25519)|(?:credentials?|secrets?)\.(?:json|ya?ml|properties|txt))$'
+$requiredReleaseFiles = @(
+    'LICENSE',
+    'LICENSES/Apache-2.0.txt',
+    'LICENSES/Bark-MIT.txt',
+    'THIRD_PARTY_NOTICES.md'
 )
 $forbidden = [ordered]@{
     'local Windows profile path' = '(?i)[A-Z]:[\\/]Users[\\/][^\\/\s"'']+'
@@ -23,12 +30,11 @@ $forbidden = [ordered]@{
     'hard-coded Bark Device Key' = '(?i)(?:bark|device)[_ -]?key\s*[:=]\s*["'']?[A-Za-z0-9_-]{16,}'
     'GitHub access token' = '(?i)\b(?:ghp_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{20,})\b'
     'generic bearer token literal' = '(?i)authorization\s*[:=]\s*["'']?bearer\s+[A-Za-z0-9._-]{20,}'
+    'credential-bearing URL' = '(?i)\bhttps?://[^/\s:@]+:[^/\s@]+@'
+    'generic secret assignment' = '(?i)\b(?:api[_ -]?key|client[_ -]?secret|password|passphrase|access[_ -]?token|refresh[_ -]?token)\b\s*[:=]\s*["''][^"'']{8,}["'']'
     'account address literal' = '(?i)\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b'
-    'mainland mobile number' = '(?<!\d)1[3-9]\d{9}(?!\d)'
-    'Japan mobile number' = '(?<!\d)(?:070|080|090)-?\d{4}-?\d{4}(?!\d)'
-    'IMEI-like identifier' = '(?<!\d)\d{15}(?!\d)'
-    'legacy secondary-channel code' = '(?i)\b(?:smtp|mime|mail|email)\b|163\.com|邮箱|邮件|网易'
-    'legacy private package marker' = '(?i)cnjp'
+    'compact phone-number-like literal' = '(?<![#A-Za-z0-9])(?:\+\d{1,3})?\d{7,15}(?![A-Za-z0-9])'
+    'formatted phone-number-like literal' = '(?<![#A-Za-z0-9])(?:\+\d{1,3}[ \t.-]?)?(?:\(?\d{2,4}\)?[ \t.-]){1,4}\d{3,4}(?![A-Za-z0-9])'
 }
 
 $violations = New-Object System.Collections.Generic.List[string]
@@ -56,9 +62,8 @@ foreach ($file in $files) {
             $forbiddenArtifactExtensions -contains $file.Extension.ToLowerInvariant()) {
         $violations.Add("${relative}: forbidden release artifact")
     }
-    if (-not $inGeneratedDirectory -and
-            $relative -match '(?i)(?:smtp|mime|mail|email|163|cnjp)') {
-        $violations.Add("${relative}: legacy channel or private marker in filename")
+    if (-not $inGeneratedDirectory -and $relative -match $sensitiveFileNamePattern) {
+        $violations.Add("${relative}: forbidden sensitive filename")
     }
     if ($inGeneratedDirectory -or $relative -eq 'scripts/check-public-tree.ps1') {
         continue
@@ -73,6 +78,12 @@ foreach ($file in $files) {
         if ($content -match $entry.Value) {
             $violations.Add("${relative}: $($entry.Key)")
         }
+    }
+}
+
+foreach ($requiredFile in $requiredReleaseFiles) {
+    if (-not (Test-Path -LiteralPath (Join-Path $projectRoot $requiredFile) -PathType Leaf)) {
+        $violations.Add("${requiredFile}: required release notice is missing")
     }
 }
 

@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  Adapted from Google Material Icons "warning" for this project's Android
+  VectorDrawable resources; path geometry and colors were adjusted.
+  Licensed under Apache-2.0; see LICENSES/Apache-2.0.txt.
+-->
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
     android:width="24dp"
     android:height="24dp"

@@ -1,4 +1,4 @@
-# SMS Relay for Bark
+# SMS Relay — Bark-compatible
 
 SMS Relay is a small Android app that receives SMS, stores pending messages in an encrypted local queue, and forwards them to Bark only when Android provides a validated Wi-Fi network.
 
@@ -44,7 +44,7 @@ A standalone clone creates an ignored local debug key under `.keys/`. GitHub Act
 3. Copy the generated AES key and fallback IV into Bark's push-encryption settings using AES256, CBC, and PKCS7.
 4. Use the in-app Bark test on non-production data before relying on unattended forwarding.
 
-The app intentionally uses the independent package ID `com.local.smsrelay` and a new Keystore alias. It does not upgrade, overwrite, or read data from earlier private variants. Forks should choose an application ID they control before store distribution.
+The app uses package ID `com.local.smsrelay` and a dedicated Keystore alias. Android isolates it from apps that use a different application ID, and no cross-application migration is performed. Forks should choose an application ID they control before store distribution.
 
 ## Security and limitations
 
@@ -54,4 +54,4 @@ Wi-Fi loss, Android power management, revoked Bark credentials, or provider outa
 
 ## License
 
-MIT. See [LICENSE](LICENSE).
+Original project code and documentation are available under the [MIT License](LICENSE). Adapted Google Material Icons remain under Apache-2.0, and the Bark encryption test vector retains Bark's MIT notice. See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [LICENSES](LICENSES/).

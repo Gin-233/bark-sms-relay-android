@@ -1,4 +1,4 @@
-# SMS Relay for Bark
+# SMS Relay — Bark-compatible
 
 SMS Relay 是一个轻量 Android 应用：接收短信，将待投递内容写入本地加密队列，并且只在 Android 提供已验证 Wi-Fi 网络时转发到 Bark。
 
@@ -44,7 +44,7 @@ SMS Relay 是一个轻量 Android 应用：接收短信，将待投递内容写�
 3. 将应用生成的 AES Key 与备用 IV 填入 Bark 的推送加密设置，选择 AES256、CBC 和 PKCS7。
 4. 在依赖无人值守转发前，先用非生产内容完成应用内 Bark 测试。
 
-本项目有意使用独立 package ID `com.local.smsrelay` 和新的 Keystore 别名，不会升级、覆盖或读取早期私有变体的数据。Fork 若要发布到应用商店，应先改为自己控制的 application ID。
+本项目使用 package ID `com.local.smsrelay` 和独立的 Keystore 别名。Android 会将它与使用其他 application ID 的应用隔离，本项目不会跨应用迁移数据。Fork 若要发布到应用商店，应先改为自己控制的 application ID。
 
 ## 安全边界
 
@@ -54,4 +54,4 @@ Wi-Fi 中断、Android 省电策略、Bark 凭据失效或服务故障都可能�
 
 ## 许可证
 
-MIT，详见 [LICENSE](LICENSE)。
+项目原创代码与文档采用 [MIT License](LICENSE)。改编的 Google Material Icons 继续采用 Apache-2.0，Bark 加密测试向量保留 Bark 的 MIT 声明。详见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) 与 [LICENSES](LICENSES/)。
